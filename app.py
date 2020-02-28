@@ -1,11 +1,16 @@
-#----------------------------------------------------------------------------#
-# Imports
-#----------------------------------------------------------------------------#
-
 import json
 import dateutil.parser
 import babel
-from flask import Flask, render_template, request, Response, flash, redirect, url_for, jsonify, abort
+from flask import (
+  Flask, 
+  render_template, 
+  request, 
+  Response,
+  flash, 
+  redirect, 
+  url_for, 
+  jsonify, 
+  abort)
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
 import logging
@@ -16,6 +21,12 @@ from flask_migrate import Migrate
 import sys
 from flask_wtf.csrf import CSRFProtect
 from datetime import datetime as dt
+from models import (
+  Artist,
+  Venue,
+  Show,
+  ContactInfo
+)
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -28,54 +39,6 @@ migrate = Migrate(app,db)
 csrf = CSRFProtect(app)
 
 
-# TODO: connect to a local postgresql database
-
-#----------------------------------------------------------------------------#
-# Models.
-#----------------------------------------------------------------------------#
-
-class Venue(db.Model):
-    __tablename__ = 'Venue'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    image_link = db.Column(db.String(500))
-    genres = db.Column(db.ARRAY(db.String))
-    contact_id = db.Column(db.Integer, db.ForeignKey('ContactInfo.id'))  
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-
-class Artist(db.Model):
-    __tablename__ = 'Artist'
-
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    genres = db.Column(db.ARRAY(db.String))
-    image_link = db.Column(db.String(500))
-    contact_id = db.Column(db.Integer, db.ForeignKey('ContactInfo.id'))
-
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
-class Show(db.Model):
-    __tablename__= 'Show'
-
-    id = db.Column(db.Integer, primary_key = True)
-    start_time = db.Column(db.DateTime)
-    artist_id = db.Column(db.Integer, db.ForeignKey('Artist.id'), nullable=False)
-    venue_id = db.Column(db.Integer, db.ForeignKey('Venue.id'), nullable=False)
-
-class ContactInfo(db.Model):
-    __tablename__='ContactInfo'
-
-    id = db.Column(db.Integer, primary_key = True)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    facebook_link = db.Column(db.String(120))
-    website = db.Column(db.String(120))
-    
-    # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
-db.create_all()
 #----------------------------------------------------------------------------#
 # Filters.
 #----------------------------------------------------------------------------#
@@ -275,6 +238,13 @@ def create_venue_submission():
 def delete_venue(venue_id):
   # TODO: Complete this endpoint for taking a venue_id, and using
   # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
+  try:
+    Venue.query.filter_by(id=venue_id).delete()
+    db.session.commit()
+  except:
+    db.session.rollback()
+  finally:
+    db.session.close()
 
   # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
   # clicking that button delete it from the db then redirect the user to the homepage
